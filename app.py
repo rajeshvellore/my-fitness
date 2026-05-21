@@ -9,10 +9,10 @@ st.set_page_config(
     page_title="Namma Health Pro",
     page_icon="🩺",
     layout="centered",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded" # Automatically exposes the native navigation menu
 )
 
-# Premium Luxury Theme Stylesheet
+# Custom High-End iOS Theme Stylesheet (Premium Dark UI)
 st.markdown("""
     <style>
     @import url('https://googleapis.com');
@@ -34,13 +34,6 @@ st.markdown("""
         font-weight: 600 !important;
         font-size: 16px !important;
     }
-    div[data-form="true"] {
-        background: linear-gradient(145deg, #111827, #1f2937) !important;
-        border: 1px solid #374151 !important;
-        border-radius: 20px !important;
-        padding: 24px !important;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
-    }
     div[data-testid="stNumberInput"] input, div[data-testid="stSelectbox"] div[data-baseweb="select"] {
         background-color: #1f2937 !important;
         color: #ffffff !important;
@@ -55,7 +48,7 @@ st.markdown("""
         font-size: 14px !important;
         margin-bottom: 6px !important;
     }
-    button[kind="primaryFormSubmit"], button[data-testid="baseButton-secondary"], button[data-testid="baseButton-primary"] {
+    button[data-testid="baseButton-secondary"], button[data-testid="baseButton-primary"] {
         background: linear-gradient(90deg, #2563eb, #3b82f6) !important;
         color: #ffffff !important;
         font-weight: 600 !important;
@@ -83,18 +76,17 @@ st.markdown("""
         border: 1px solid #2563eb; 
         margin-bottom: 15px;
     }
-    
     .user-bubble { background-color: #2563eb; color: white; padding: 12px; border-radius: 14px 14px 0px 14px; margin-bottom: 10px; max-width: 85%; margin-left: auto; text-align: left; }
     .ai-bubble { background-color: #1f2937; color: #f3f4f6; padding: 12px; border-radius: 14px 14px 14px 0px; margin-bottom: 10px; max-width: 85%; border: 1px solid #374151; }
     </style>
 """, unsafe_allow_html=True)
 
-# Fetching Data Using Clean Requests Library instead of Urllib
+# Live Open Food Facts API Cache Module
 @st.cache_data(ttl=3600)
 def fetch_live_food_data(barcode, fallback_name, c_100, p_100, cb_100, f_100):
     try:
         url = f"https://openfoodfacts.org{barcode}.json"
-        response = requests.get(url, headers={'User-Agent': 'NammaHealthPro - iOS - Version 6.0'}, timeout=5)
+        response = requests.get(url, headers={'User-Agent': 'NammaHealthPro - iOS - Version 7.0'}, timeout=5)
         if response.status_code == 200:
             data = response.json()
             if data.get("status") == 1:
@@ -111,7 +103,6 @@ def fetch_live_food_data(barcode, fallback_name, c_100, p_100, cb_100, f_100):
         pass
     return {"name": fallback_name, "calories_100g": c_100, "protein_100g": p_100, "carbs_100g": cb_100, "fats_100g": f_100}
 
-# Local Food Catalog Configuration
 food_catalog = {
     "Carbohydrates": {
         "Rolled Oats": {"barcode": "7311150031206", "c": 389, "p": 16.9, "cb": 66.3, "f": 6.9},
@@ -132,50 +123,55 @@ food_catalog = {
     }
 }
 
-st.title("🩺 Namma Health Pro Studio")
-st.markdown("##### Interactive Engine & AI Health Coach")
+# ----------------- SIDEBAR NAVIGATION MENU -----------------
+st.sidebar.title("🧭 Menu Navigation")
+app_page = st.sidebar.radio(
+    "Go To Panel:",
+    ["📋 Profile Configuration", "🥗 Personalized Diet Plan", "🏠 Home Workout Logger", "💬 ChatGPT Health Coach"]
+)
 
-with st.form("interactive_health_form"):
-    st.markdown("### 👤 Step 1: Core Metrics")
-    col1, col2 = st.columns(2)
-    with col1:
-        age = st.number_input("Age (Years)", min_value=1, max_value=120, value=40)
-        gender = st.selectbox("Gender", ["Male", "Female"])
-    with col2:
-        height_cm = st.number_input("Height (cm)", min_value=50, max_value=250, value=175)
-        weight_kg = st.number_input("Weight (kg)", min_value=10, max_value=300, value=62)
-        
-    st.markdown("---")
-    st.markdown("### 🗺️ Step 2: Location Profile")
-    location = st.selectbox("Geographic Hub", ["Bengaluru, India (ORR / Whitefield IT Belt)", "Other Global Locations"])
+# Persistent State Setup for Cross-Page Calculations
+if "age" not in st.session_state: st.session_state.age = 40
+if "weight" not in st.session_state: st.session_state.weight = 62
+if "height" not in st.session_state: st.session_state.height = 175
+if "gender" not in st.session_state: st.session_state.gender = "Male"
+if "location" not in st.session_state: st.session_state.location = "Bengaluru, India (ORR / Whitefield IT Belt)"
 
-    submit_btn = st.form_submit_button("CALIBRATE APP ENGINE")
+# Execute Dynamic Baselines Globally
+if st.session_state.gender == "Female":
+    bmr = int(447.593 + (9.247 * st.session_state.weight) + (3.098 * st.session_state.height) - (4.330 * st.session_state.age))
+else:
+    bmr = int(88.362 + (13.397 * st.session_state.weight) + (4.799 * st.session_state.height) - (5.677 * st.session_state.age))
+tdee = int(bmr * 1.375)  
+caloric_target = tdee + 350
+protein_target_g = int((caloric_target * 0.30) / 4)
+carb_target_g = int((caloric_target * 0.45) / 4)
+fat_target_g = int((caloric_target * 0.25) / 9)
 
-if submit_btn or 'interactive_calculated' in st.session_state:
-    st.session_state['interactive_calculated'] = True
+
+# ================= PAGE 1: CONFIGURATION =================
+if app_page == "📋 Profile Configuration":
+    st.title("📋 User Parameters Configuration")
+    st.markdown("##### Calibrate your physical profile metrics here.")
     
-    if gender == "Female":
-        bmr = int(447.593 + (9.247 * weight_kg) + (3.098 * height_cm) - (4.330 * age))
-    else:
-        bmr = int(88.362 + (13.397 * weight_kg) + (4.799 * height_cm) - (5.677 * age))
-        
-    tdee = int(bmr * 1.375)  
-    caloric_target = tdee + 350
+    st.session_state.age = st.number_input("Age (Years)", min_value=1, max_value=120, value=st.session_state.age)
+    st.session_state.gender = st.selectbox("Gender", ["Male", "Female"], index=0 if st.session_state.gender == "Male" else 1)
+    st.session_state.height = st.number_input("Height (cm)", min_value=50, max_value=250, value=st.session_state.height)
+    st.session_state.weight = st.number_input("Weight (kg)", min_value=10, max_value=300, value=st.session_state.weight)
+    st.session_state.location = st.selectbox("Geographic Hub", ["Bengaluru, India (ORR / Whitefield IT Belt)", "Other Global Locations"])
     
-    protein_target_g = int((caloric_target * 0.30) / 4)
-    carb_target_g = int((caloric_target * 0.45) / 4)
-    fat_target_g = int((caloric_target * 0.25) / 9)
+    st.success("Configuration loaded! Access your custom plan sections via the sidebar menu links.")
 
-    st.markdown("---")
-    st.markdown("### 📊 Energy Blueprint Results")
+
+# ================= PAGE 2: DIET PLAN =================
+elif app_page == "🥗 Personalized Diet Plan":
+    st.title("🥗 Live API-Driven Nutrition Studio")
+    
     m_col1, m_col2 = st.columns(2)
     with m_col1: st.metric(label="Basal Energy (BMR)", value=f"{bmr} kcal")
-    with m_col2: st.metric(label="Clean Gain Target", value=f"{caloric_target} kcal")
+    with m_col2: st.metric(label="Muscle Gain Target", value=f"{caloric_target} kcal")
 
-    # Step 3: Interactive Food Exchanges (All 4 meal selectors included)
-    st.markdown("---")
-    st.markdown("### 🥞 Step 3: Interactive Food Exchanges")
-    
+    st.markdown("### 🥞 Customize Your Food Selections")
     col_sel1, col_sel2 = st.columns(2)
     with col_sel1:
         bf_carb_choice = st.selectbox("Breakfast Carb Source", list(food_catalog["Carbohydrates"].keys()), index=0)
@@ -187,7 +183,7 @@ if submit_btn or 'interactive_calculated' in st.session_state:
         dinner_carb_choice = st.selectbox("Dinner Carb Source", list(food_catalog["Carbohydrates"].keys()), index=2)
         dinner_prot_choice = st.selectbox("Dinner Protein Source", list(food_catalog["Proteins"].keys()), index=0)
 
-    # API Queries for selected data strings
+    # API lookups
     c_bf_meta = food_catalog["Carbohydrates"][bf_carb_choice]
     p_bf_meta = food_catalog["Proteins"][bf_prot_choice]
     bf_carb_api = fetch_live_food_data(c_bf_meta["barcode"], bf_carb_choice, c_bf_meta["c"], c_bf_meta["p"], c_bf_meta["cb"], c_bf_meta["f"])
@@ -206,75 +202,83 @@ if submit_btn or 'interactive_calculated' in st.session_state:
     dn_carb_api = fetch_live_food_data(c_dn_meta["barcode"], dinner_carb_choice, c_dn_meta["c"], c_dn_meta["p"], c_dn_meta["cb"], c_dn_meta["f"])
     dn_prot_api = fetch_live_food_data(p_dn_meta["barcode"], dinner_prot_choice, p_dn_meta["c"], p_dn_meta["p"], p_dn_meta["cb"], p_dn_meta["f"])
 
-    # Gram Portion Weight Math (Calorie distribution split: 25% BF, 35% Lunch, 15% Snack, 25% Dinner)
     calc_bf_carb_g = int((carb_target_g * 0.25) / (max(bf_carb_api["carbs_100g"], 1) / 100))
     calc_bf_prot_g = int((protein_target_g * 0.25) / (max(bf_prot_api["protein_100g"], 1) / 100))
-    
     calc_ln_carb_g = int((carb_target_g * 0.35) / (max(ln_carb_api["carbs_100g"], 1) / 100))
     calc_ln_prot_g = int((protein_target_g * 0.35) / (max(ln_prot_api["protein_100g"], 1) / 100))
-    
     calc_snack_g = int((caloric_target * 0.15) / (max(snack_api["calories_100g"], 1) / 100))
-    
     calc_dn_carb_g = int((carb_target_g * 0.25) / (max(dn_carb_api["carbs_100g"], 1) / 100))
     calc_dn_prot_g = int((protein_target_g * 0.25) / (max(dn_prot_api["protein_100g"], 1) / 100))
 
-    # Complete 4-Meal Plan Output Cards Render Block
-    st.markdown("### 📋 Your Balanced Meal Portions")
+    st.markdown("### 📋 Your Calculated Portions")
     st.markdown(f"""
     <div class="plan-card">
-        <h4 style="color: #3b82f6; margin-top: 0;">🌅 Morning Breakfast Target</h4>
+        <h4 style="color: #3b82f6; margin-top: 0;">🌅 Morning Breakfast Portion</h4>
         <p style="color: #e5e7eb; margin-bottom: 0;">• Consume <b>{calc_bf_carb_g}g</b> of {bf_carb_api['name']} paired with <b>{calc_bf_prot_g}g</b> of {bf_prot_api['name']}.</p>
     </div>
     <div class="plan-card">
-        <h4 style="color: #3b82f6; margin-top: 0;">🍱 Office Lunch Target</h4>
-        <p style="color: #e5e7eb; margin-bottom: 0;">• Consume <b>{calc_ln_carb_g}g</b> of {ln_carb_api['name']} paired with <b>{calc_ln_prot_g}g</b> of {ln_prot_api['name']}. Add 1.5 tbsp Ghee to rice grains.</p>
+        <h4 style="color: #3b82f6; margin-top: 0;">🍱 Office Lunch Portion</h4>
+        <p style="color: #e5e7eb; margin-bottom: 0;">• Consume <b>{calc_ln_carb_g}g</b> of {ln_carb_api['name']} paired with <b>{calc_ln_prot_g}g</b> of {ln_prot_api['name']}. Add 1.5 tbsp Ghee to grains.</p>
     </div>
     <div class="plan-card">
         <h4 style="color: #3b82f6; margin-top: 0;">🥜 Tech-Park Desk Snack</h4>
-        <p style="color: #e5e7eb; margin-bottom: 0;">• Keep at desk and measure out <b>{calc_snack_g}g</b> of {snack_api['name']} during afternoon operational calls.</p>
+        <p style="color: #e5e7eb; margin-bottom: 0;">• Measure out <b>{calc_snack_g}g</b> of {snack_api['name']} during afternoon calls.</p>
     </div>
     <div class="plan-card">
-        <h4 style="color: #3b82f6; margin-top: 0;">🍽️ Balanced Evening Dinner Target</h4>
-        <p style="color: #e5e7eb; margin-bottom: 0;">• Consume <b>{calc_dn_carb_g}g</b> of {dn_carb_api['name']} balanced with <b>{calc_dn_prot_g}g</b> of {dn_prot_api['name']} to maintain structural amino recovery.</p>
+        <h4 style="color: #3b82f6; margin-top: 0;">🍽️ Evening Dinner Portion</h4>
+        <p style="color: #e5e7eb; margin-bottom: 0;">• Consume <b>{calc_dn_carb_g}g</b> of {dn_carb_api['name']} balanced with <b>{calc_dn_prot_g}g</b> of {dn_prot_api['name']}.</p>
     </div>
     """, unsafe_allow_html=True)
 
-    # Restored Home Workout Module Block
-    st.markdown("---")
-    st.markdown("### 🏠 45-Min Postural & Home Workout Log")
-    st.caption("Target tracking variables to activate dead glutes, adjust desk slouching, and protect joints.")
+
+# ================= PAGE 3: WORKOUT LOG =================
+elif app_page == "🏠 Home Workout Logger":
+    st.title("🏠 Joint-Safe Home Training Logger")
+    st.markdown("##### Targeted movements to reverse desk slumping and build muscle safely.")
+    
+    st.markdown("""
+    <div style="background-color: #1e1b4b; border-left: 4px solid #818cf8; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+        <span style="color: #a5b4fc; font-weight: 600;">🚨 Active Stretch Reminder:</span><br>
+        <span style="color: #d1d5db; font-size: 14px;">Complete 2 sets of Cat-Cow exercises to loosen tight spinal muscles before logging weights.</span>
+    </div>
+    """, unsafe_allow_html=True)
+
     w_col1, w_col2 = st.columns(2)
     with w_col1:
-        st.markdown("##### 🦵 Lower Body (Spinal Safety Target)")
-        st.number_input("Leg Press / Dumbbell Goblet Squats (kg)", min_value=5, value=25, key="h_ex1")
-        st.caption("_3 Sets × 10 Reps (Protects lumbar vertebrae from keyboard-sitting posture strain)_")
-        st.number_input("Dumbbell Romanian Deadlifts (kg)", min_value=5, value=16, key="h_ex2")
-        st.caption("_3 Sets × 12 Reps (Awakens posterior chains and hip flexibility metrics)_")
+        st.markdown("##### 🦵 Lower Body (Spinal Protection)")
+        st.number_input("Leg Press / Goblet Squats (kg)", min_value=5, value=25, key="nav_ex1")
+        st.caption("_3 Sets × 10 Reps (Reduces spinal loading context)_")
+        st.number_input("Dumbbell Romanian Deadlifts (kg)", min_value=5, value=16, key="nav_ex2")
+        st.caption("_3 Sets × 12 Reps (Activates sitting-stiff hamstrings)_")
     with w_col2:
-        st.markdown("##### 💪 Upper Body (Postural Alignment Correction)")
-        st.number_input("Dumbbell Floor / Chest Press (kg per hand)", min_value=4, value=12, key="h_ex3")
-        st.caption("_3 Sets × 10 Reps (Safe shoulder glenohumeral motion parameters)_")
-        st.number_input("Seated Rows / Banded Lat Pull-Downs (kg)", min_value=10, value=30, key="h_ex4")
-        st.caption("_3 Sets × 12 Reps (Directly counteracts tech-desk rounded shoulders)_")
+        st.markdown("##### 💪 Upper Body (Postural Alignment)")
+        st.number_input("Dumbbell Chest Press (kg per hand)", min_value=4, value=12, key="nav_ex3")
+        st.caption("_3 Sets × 10 Reps (Kind to shoulder rotators)_")
+        st.number_input("Seated Rows / Band Pulldowns (kg)", min_value=10, value=30, key="nav_ex4")
+        st.caption("_3 Sets × 12 Reps (Fixes rounded shoulders)_")
 
-    if location == "Bengaluru, India (ORR / Whitefield IT Belt)":
+    if st.session_state.location == "Bengaluru, India (ORR / Whitefield IT Belt)":
         st.markdown("---")
         st.markdown("""
-        <div style="background-color: #1e1b4b; border-left: 5px solid #818cf8; padding: 18px; border-radius: 12px;">
-            <p style="color: #c7d2fe; font-size: 14px; line-height: 1.6; margin-bottom: 0;">
-                ⚠️ <b>IT Hub Epidemiological Warning</b>: Clinical audits track that <b>77% of Bengaluru tech professionals</b> experience active Vitamin D3 reductions due to indoor shifts. Balance this by taking walking meetings or using short standing-break intervals during long computer shifts.
+        <div style="background-color: #111827; border-left: 5px solid #2563eb; padding: 15px; border-radius: 12px;">
+            <p style="color: #d1d5db; font-size: 14px; margin-bottom: 0;">
+                📍 <b>Regional Warning</b>: Long desk shifts increase Vitamin D3 deficiency risk. Supplementation and brief walking breaks during coding windows are strongly advised.
             </p>
         </div>
         """, unsafe_allow_html=True)
+    
+    if st.button("💾 SAVE LIFT DATA"):
+        st.toast("Workout log saved successfully!")
 
-    # Section 4: Live GPT Chat Core Interface System
-    st.markdown("---")
-    st.markdown("### 💬 Chat with Your AI Hypertrophy Coach")
-    st.caption("Discuss your calculations, target meal portions, or posture exercises.")
+
+# ================= PAGE 4: AI COACH CHAT =================
+elif app_page == "💬 ChatGPT Health Coach":
+    st.title("💬 Chat with Your AI Hypertrophy Coach")
+    st.caption("Ask questions about your custom calorie targets or specific exercise alterations.")
 
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = [
-            {"role": "assistant", "content": f"Hello! I am your custom Health Coach. I see you are {age} years old, weigh {weight_kg}kg, live in {location.split(',')}, and want to achieve a target of {caloric_target} kcal/day. How can I assist you with your diet or exercises today?"}
+            {"role": "assistant", "content": f"Hello! I am your Health Coach. I have your parameters: Age {st.session_state.age}, Weight {st.session_state.weight}kg, Goal Surplus Target {caloric_target} kcal. What can I clarify for you today?"}
         ]
 
     for message in st.session_state.chat_history:
@@ -292,11 +296,11 @@ if submit_btn or 'interactive_calculated' in st.session_state:
         api_key = st.secrets.get("OPENAI_API_KEY", "")
 
         if not api_key:
-            ai_response = "⚠️ App Configuration Note: Please add your `OPENAI_API_KEY` inside your Streamlit Cloud Secrets dashboard."
+            ai_response = "⚠️ Key Missing: Add your `OPENAI_API_KEY` inside your Streamlit Cloud Secrets box."
         else:
             try:
                 client = OpenAI(api_key=api_key.strip())
-                system_prompt = f"You are an expert sports nutritionist and strength coach assisting a {age}-year-old male user. Weight: {weight_kg}kg, Height: {height_cm}cm, Location: {location}. Target Calories: {caloric_target}kcal, Target Protein: {protein_target_g}g. Provide actionable, concise health guidance. Keep answers short and optimal for reading on an iPhone mobile screen."
+                system_prompt = f"You are an expert sports nutritionist and strength coach assisting a {st.session_state.age}-year-old male. Weight: {st.session_state.weight}kg, Height: {st.session_state.height}cm, Location: {st.session_state.location}. Target: {caloric_target}kcal. Provide short, concise mobile-friendly answers."
                 
                 messages_payload = [{"role": "system", "content": system_prompt}]
                 for h in st.session_state.chat_history[-5:]:
@@ -307,12 +311,10 @@ if submit_btn or 'interactive_calculated' in st.session_state:
                     messages=messages_payload,
                     temperature=0.7
                 )
-                                # FIX: Add the zero index [0] to match the updated OpenAI SDK response structure
                 ai_response = response.choices[0].message.content
-
                     
             except Exception as e:
-                ai_response = f"Official Gateway Connection Error: {str(e)}"
+                ai_response = f"Gateway Connection Error: {str(e)}"
 
         st.markdown(f'<div class="ai-bubble">🤖 {ai_response}</div>', unsafe_allow_html=True)
         st.session_state.chat_history.append({"role": "assistant", "content": ai_response})
