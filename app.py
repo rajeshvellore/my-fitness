@@ -1,7 +1,8 @@
 import streamlit as st
 import datetime
-import urllib.request
+import requests
 import json
+from openai import OpenAI
 
 # Premium Mobile iOS Layout Configuration
 st.set_page_config(
@@ -11,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom High-End Theme Stylesheet (Premium Dark UI)
+# Premium Luxury Theme Stylesheet
 st.markdown("""
     <style>
     @import url('https://googleapis.com');
@@ -83,20 +84,19 @@ st.markdown("""
         margin-bottom: 15px;
     }
     
-    /* Custom Styling for Chat Bubbles */
     .user-bubble { background-color: #2563eb; color: white; padding: 12px; border-radius: 14px 14px 0px 14px; margin-bottom: 10px; max-width: 85%; margin-left: auto; text-align: left; }
     .ai-bubble { background-color: #1f2937; color: #f3f4f6; padding: 12px; border-radius: 14px 14px 14px 0px; margin-bottom: 10px; max-width: 85%; border: 1px solid #374151; }
     </style>
 """, unsafe_allow_html=True)
 
-# Live API Engine for Open Food Facts
+# Fetching Data Using Clean Requests Library instead of Urllib
 @st.cache_data(ttl=3600)
 def fetch_live_food_data(barcode, fallback_name, c_100, p_100, cb_100, f_100):
     try:
         url = f"https://openfoodfacts.org{barcode}.json"
-        req = urllib.request.Request(url, headers={'User-Agent': 'NammaHealthPro - iOS - Version 4.0'})
-        with urllib.request.urlopen(req) as response:
-            data = json.loads(response.read().decode())
+        response = requests.get(url, headers={'User-Agent': 'NammaHealthPro - iOS - Version 5.0'}, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
             if data.get("status") == 1:
                 prod = data["product"]
                 nutriments = prod.get("nutriments", {})
@@ -111,7 +111,7 @@ def fetch_live_food_data(barcode, fallback_name, c_100, p_100, cb_100, f_100):
         pass
     return {"name": fallback_name, "calories_100g": c_100, "protein_100g": p_100, "carbs_100g": cb_100, "fats_100g": f_100}
 
-# Food Options Catalog mapped to global Barcode System
+# Local Food Catalog Configuration
 food_catalog = {
     "Carbohydrates": {
         "Rolled Oats": {"barcode": "7311150031206", "c": 389, "p": 16.9, "cb": 66.3, "f": 6.9},
@@ -131,7 +131,6 @@ food_catalog = {
 st.title("🩺 Namma Health Pro Studio")
 st.markdown("##### Interactive Engine & AI Health Coach")
 
-# Step 1: User Metrics Input Form
 with st.form("interactive_health_form"):
     st.markdown("### 👤 Step 1: Core Metrics")
     col1, col2 = st.columns(2)
@@ -151,7 +150,6 @@ with st.form("interactive_health_form"):
 if submit_btn or 'interactive_calculated' in st.session_state:
     st.session_state['interactive_calculated'] = True
     
-    # Mathematical BMR & TDEE Baselines
     if gender == "Female":
         bmr = int(447.593 + (9.247 * weight_kg) + (3.098 * height_cm) - (4.330 * age))
     else:
@@ -164,14 +162,12 @@ if submit_btn or 'interactive_calculated' in st.session_state:
     carb_target_g = int((caloric_target * 0.45) / 4)
     fat_target_g = int((caloric_target * 0.25) / 9)
 
-    # Core Dashboard Readouts
     st.markdown("---")
     st.markdown("### 📊 Energy Blueprint Results")
     m_col1, m_col2 = st.columns(2)
     with m_col1: st.metric(label="Basal Energy (BMR)", value=f"{bmr} kcal")
     with m_col2: st.metric(label="Clean Gain Target", value=f"{caloric_target} kcal")
 
-    # Step 3: Interactive Food Selection Hubs
     st.markdown("---")
     st.markdown("### 🥞 Step 3: Interactive Food Exchanges")
     
@@ -180,7 +176,6 @@ if submit_btn or 'interactive_calculated' in st.session_state:
     lunch_carb_choice = st.selectbox("Lunch Carb Source", list(food_catalog["Carbohydrates"].keys()), index=1)
     lunch_prot_choice = st.selectbox("Lunch Protein Source", list(food_catalog["Proteins"].keys()), index=1)
 
-    # Fetch live database values
     c_bf_meta = food_catalog["Carbohydrates"][bf_carb_choice]
     p_bf_meta = food_catalog["Proteins"][bf_prot_choice]
     bf_carb_api = fetch_live_food_data(c_bf_meta["barcode"], bf_carb_choice, c_bf_meta["c"], c_bf_meta["p"], c_bf_meta["cb"], c_bf_meta["f"])
@@ -191,13 +186,11 @@ if submit_btn or 'interactive_calculated' in st.session_state:
     ln_carb_api = fetch_live_food_data(c_ln_meta["barcode"], lunch_carb_choice, c_ln_meta["c"], c_ln_meta["p"], c_ln_meta["cb"], c_ln_meta["f"])
     ln_prot_api = fetch_live_food_data(p_ln_meta["barcode"], lunch_prot_choice, p_ln_meta["c"], p_ln_meta["p"], p_ln_meta["cb"], p_ln_meta["f"])
 
-    # Gram Portion Weight Math
     calc_bf_carb_g = int((carb_target_g * 0.40) / (max(bf_carb_api["carbs_100g"], 1) / 100))
     calc_bf_prot_g = int((protein_target_g * 0.45) / (max(bf_prot_api["protein_100g"], 1) / 100))
     calc_ln_carb_g = int((carb_target_g * 0.60) / (max(ln_carb_api["carbs_100g"], 1) / 100))
     calc_ln_prot_g = int((protein_target_g * 0.55) / (max(ln_prot_api["protein_100g"], 1) / 100))
 
-    # Display Dynamic Portion Plates
     st.markdown(f"""
     <div class="plan-card">
         <h4 style="color: #3b82f6; margin-top: 0;">🌅 Morning Breakfast Target Portion</h4>
@@ -209,75 +202,53 @@ if submit_btn or 'interactive_calculated' in st.session_state:
     </div>
     """, unsafe_allow_html=True)
 
-    # SECTION 4: LIVE AI CHAT MODULE (LINKED TO OPENAI CORE SPECIFICATIONS)
+    # SECTION 4: RECONFIGURED OFFICIAL SDK AI CHAT MODULE
     st.markdown("---")
     st.markdown("### 💬 4. Chat with Your AI Hypertrophy Coach")
     st.caption("Ask questions about your calories, workout recovery, or food alternatives.")
 
-    # Initialize conversation state memory
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = [
-            {"role": "assistant", "content": f"Hello! I am your custom Health Coach. I see you are {age} years old, weigh {weight_kg}kg, live in {location.split(',')[0]}, and want to achieve a target of {caloric_target} kcal/day. How can I assist you with your diet or exercises today?"}
+            {"role": "assistant", "content": f"Hello! I am your custom Health Coach. I see you are {age} years old, weigh {weight_kg}kg, live in {location.split(',')}, and want to achieve a target of {caloric_target} kcal/day. How can I assist you with your diet or exercises today?"}
         ]
 
-    # Render previous chat blocks nicely
     for message in st.session_state.chat_history:
         if message["role"] == "user":
             st.markdown(f'<div class="user-bubble">{message["content"]}</div>', unsafe_allow_html=True)
         else:
             st.markdown(f'<div class="ai-bubble">🤖 {message["content"]}</div>', unsafe_allow_html=True)
 
-    # Capture User Input from standard mobile chat strip
     user_query = st.chat_input("Type your question here...")
 
     if user_query:
-        # Show user message instantly
         st.markdown(f'<div class="user-bubble">{user_query}</div>', unsafe_allow_html=True)
         st.session_state.chat_history.append({"role": "user", "content": user_query})
 
-        # Secure OpenAI Endpoint Proxy Construction
-        # Pulls your secret API key safely from Streamlit's environment cloud secrets manager
         api_key = st.secrets.get("OPENAI_API_KEY", "")
 
         if not api_key:
-            ai_response = "⚠️ App Configuration Note: Please add your `OPENAI_API_KEY` inside your Streamlit Cloud Secrets dashboard to enable live GPT responses. Here is an offline suggestion: Make sure you monitor your protein macro threshold closely!"
+            ai_response = "⚠️ App Configuration Note: Please add your `OPENAI_API_KEY` inside your Streamlit Cloud Secrets dashboard."
         else:
             try:
-                # Format system contextual mapping instructions
+                # Initialize Official OpenAI Client SDK Architecture
+                client = OpenAI(api_key=api_key.strip())
+                
                 system_prompt = f"You are an expert sports nutritionist and strength coach assisting a {age}-year-old male user. Weight: {weight_kg}kg, Height: {height_cm}cm, Location: {location}. Target Calories: {caloric_target}kcal, Target Protein: {protein_target_g}g. Provide actionable, concise health guidance. Keep answers short and optimal for reading on an iPhone mobile screen."
                 
-                # Setup structure payload
                 messages_payload = [{"role": "system", "content": system_prompt}]
-                for h in st.session_state.chat_history[-5:]: # Keep last 5 iterations to save mobile data memory
+                for h in st.session_state.chat_history[-5:]:
                     messages_payload.append({"role": h["role"], "content": h["content"]})
 
-                data_payload = json.dumps({
-                    "model": "gpt-4o-mini",
-                    "messages": messages_payload,
-                    "temperature": 0.7
-                }).encode("utf-8")
-
-                # FIX: Explicitly pass common browser headers to completely bypass the 403 Forbidden firewall blocks
-                req = urllib.request.Request(
-                    "https://openai.com",
-                    data=data_payload,
-                    headers={
-                        "Authorization": f"Bearer {api_key.strip()}",
-                        "Content-Type": "application/json",
-                        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1",
-                        "Accept": "application/json"
-                    }
+                # Call the completion framework using official structures
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=messages_payload,
+                    temperature=0.7
                 )
-                
-                with urllib.request.urlopen(req) as resp:
-                    resp_data = json.loads(resp.read().decode("utf-8"))
-                    ai_response = resp_data["choices"]["message"]["content"]
+                ai_response = response.choices[0].message.content
                     
-            except urllib.error.HTTPError as http_err:
-                ai_response = f"OpenAI Gateway Refusal ({http_err.code}): {http_err.read().decode('utf-8', errors='ignore')}"
             except Exception as e:
-                ai_response = f"Connection error reaching OpenAI servers: {str(e)}"
+                ai_response = f"Official Gateway Connection Error: {str(e)}"
 
-        # Render response block and append to continuous state profile
         st.markdown(f'<div class="ai-bubble">🤖 {ai_response}</div>', unsafe_allow_html=True)
         st.session_state.chat_history.append({"role": "assistant", "content": ai_response})
