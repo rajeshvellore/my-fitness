@@ -307,7 +307,9 @@ if submit_btn or 'interactive_calculated' in st.session_state:
                     messages=messages_payload,
                     temperature=0.7
                 )
-                ai_response = response.choices.message.content
+                                # FIX: Add the zero index [0] to match the updated OpenAI SDK response structure
+                ai_response = response.choices[0].message.content
+
                     
             except Exception as e:
                 ai_response = f"Official Gateway Connection Error: {str(e)}"
