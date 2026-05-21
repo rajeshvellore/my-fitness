@@ -325,7 +325,7 @@ elif app_page == "💬 ChatGPT Health Coach":
                     messages=messages_payload,
                     temperature=0.7
                 )
-                ai_response = response.choices.message.content
+                ai_response = response.choices[0].message.content
                     
             except Exception as e:
                 ai_response = f"Gateway Connection Error: {str(e)}"
