@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Premium Luxury Theme Stylesheet
+# Custom High-End Theme Stylesheet (Premium Dark UI)
 st.markdown("""
     <style>
     @import url('https://googleapis.com');
@@ -82,15 +82,19 @@ st.markdown("""
         border: 1px solid #2563eb; 
         margin-bottom: 15px;
     }
+    
+    /* Custom Styling for Chat Bubbles */
+    .user-bubble { background-color: #2563eb; color: white; padding: 12px; border-radius: 14px 14px 0px 14px; margin-bottom: 10px; max-width: 85%; margin-left: auto; text-align: left; }
+    .ai-bubble { background-color: #1f2937; color: #f3f4f6; padding: 12px; border-radius: 14px 14px 14px 0px; margin-bottom: 10px; max-width: 85%; border: 1px solid #374151; }
     </style>
 """, unsafe_allow_html=True)
 
-# Live Open Food Facts API Engine with Barcode Routing Matrix
+# Live API Engine for Open Food Facts
 @st.cache_data(ttl=3600)
 def fetch_live_food_data(barcode, fallback_name, c_100, p_100, cb_100, f_100):
     try:
         url = f"https://openfoodfacts.org{barcode}.json"
-        req = urllib.request.Request(url, headers={'User-Agent': 'NammaHealthPro - iOS - Version 3.0'})
+        req = urllib.request.Request(url, headers={'User-Agent': 'NammaHealthPro - iOS - Version 4.0'})
         with urllib.request.urlopen(req) as response:
             data = json.loads(response.read().decode())
             if data.get("status") == 1:
@@ -125,9 +129,9 @@ food_catalog = {
 }
 
 st.title("🩺 Namma Health Pro Studio")
-st.markdown("##### Interactive Multi-Choice Hypertrophy Configurator")
+st.markdown("##### Interactive Engine & AI Health Coach")
 
-# Step 1: User Metrics
+# Step 1: User Metrics Input Form
 with st.form("interactive_health_form"):
     st.markdown("### 👤 Step 1: Core Metrics")
     col1, col2 = st.columns(2)
@@ -142,18 +146,18 @@ with st.form("interactive_health_form"):
     st.markdown("### 🗺️ Step 2: Location Profile")
     location = st.selectbox("Geographic Hub", ["Bengaluru, India (ORR / Whitefield IT Belt)", "Other Global Locations"])
 
-    submit_btn = st.form_submit_button("CALIBRATE METABOLIC BASES")
+    submit_btn = st.form_submit_button("CALIBRATE APP ENGINE")
 
 if submit_btn or 'interactive_calculated' in st.session_state:
     st.session_state['interactive_calculated'] = True
     
-    # Calculate baseline boundaries
+    # Mathematical BMR & TDEE Baselines
     if gender == "Female":
         bmr = int(447.593 + (9.247 * weight_kg) + (3.098 * height_cm) - (4.330 * age))
     else:
         bmr = int(88.362 + (13.397 * weight_kg) + (4.799 * height_cm) - (5.677 * age))
         
-    tdee = int(bmr * 1.375)  # Context baseline (IT professional desk job + walking)
+    tdee = int(bmr * 1.375)  
     caloric_target = tdee + 350
     
     protein_target_g = int((caloric_target * 0.30) / 4)
@@ -162,30 +166,21 @@ if submit_btn or 'interactive_calculated' in st.session_state:
 
     # Core Dashboard Readouts
     st.markdown("---")
-    st.markdown("### 📊 Calculated Energy Blueprint")
+    st.markdown("### 📊 Energy Blueprint Results")
     m_col1, m_col2 = st.columns(2)
     with m_col1: st.metric(label="Basal Energy (BMR)", value=f"{bmr} kcal")
     with m_col2: st.metric(label="Clean Gain Target", value=f"{caloric_target} kcal")
 
-    # STEP 3: THE INTERACTIVE FOOD SELECTION HUBS
+    # Step 3: Interactive Food Selection Hubs
     st.markdown("---")
-    st.markdown("### 🥞 Step 3: Configure Your Daily Meals Interactively")
-    st.write("Pick your foods below. The app will pull live data and tell you exactly how many grams to cook.")
+    st.markdown("### 🥞 Step 3: Interactive Food Exchanges")
+    
+    bf_carb_choice = st.selectbox("Breakfast Carb Source", list(food_catalog["Carbohydrates"].keys()), index=0)
+    bf_prot_choice = st.selectbox("Breakfast Protein Source", list(food_catalog["Proteins"].keys()), index=2)
+    lunch_carb_choice = st.selectbox("Lunch Carb Source", list(food_catalog["Carbohydrates"].keys()), index=1)
+    lunch_prot_choice = st.selectbox("Lunch Protein Source", list(food_catalog["Proteins"].keys()), index=1)
 
-    # Interactively choose ingredients for different meals
-    st.markdown("#### 🌅 Breakfast Configurator")
-    bf_carb_choice = st.selectbox("Select Breakfast Carb Source", list(food_catalog["Carbohydrates"].keys()), index=0)
-    bf_prot_choice = st.selectbox("Select Breakfast Protein Source", list(food_catalog["Proteins"].keys()), index=2)
-
-    st.markdown("#### 🍱 Corporate Lunch Configurator")
-    lunch_carb_choice = st.selectbox("Select Lunch Carb Source", list(food_catalog["Carbohydrates"].keys()), index=1)
-    lunch_prot_choice = st.selectbox("Select Lunch Protein Source", list(food_catalog["Proteins"].keys()), index=1)
-
-    st.markdown("#### 🍽️ Midnight Recovery Dinner Configurator")
-    dinner_carb_choice = st.selectbox("Select Dinner Carb Source", list(food_catalog["Carbohydrates"].keys()), index=2)
-    dinner_prot_choice = st.selectbox("Select Dinner Protein Source", list(food_catalog["Proteins"].keys()), index=3)
-
-    # Fetching live chosen data matrices from API lookup strings
+    # Fetch live database values
     c_bf_meta = food_catalog["Carbohydrates"][bf_carb_choice]
     p_bf_meta = food_catalog["Proteins"][bf_prot_choice]
     bf_carb_api = fetch_live_food_data(c_bf_meta["barcode"], bf_carb_choice, c_bf_meta["c"], c_bf_meta["p"], c_bf_meta["cb"], c_bf_meta["f"])
@@ -196,78 +191,89 @@ if submit_btn or 'interactive_calculated' in st.session_state:
     ln_carb_api = fetch_live_food_data(c_ln_meta["barcode"], lunch_carb_choice, c_ln_meta["c"], c_ln_meta["p"], c_ln_meta["cb"], c_ln_meta["f"])
     ln_prot_api = fetch_live_food_data(p_ln_meta["barcode"], lunch_prot_choice, p_ln_meta["c"], p_ln_meta["p"], p_ln_meta["cb"], p_ln_meta["f"])
 
-    c_dn_meta = food_catalog["Carbohydrates"][dinner_carb_choice]
-    p_dn_meta = food_catalog["Proteins"][dinner_prot_choice]
-    dn_carb_api = fetch_live_food_data(c_dn_meta["barcode"], dinner_carb_choice, c_dn_meta["c"], c_dn_meta["p"], c_dn_meta["cb"], c_dn_meta["f"])
-    dn_prot_api = fetch_live_food_data(p_dn_meta["barcode"], dinner_prot_choice, p_dn_meta["c"], p_dn_meta["p"], p_dn_meta["cb"], p_dn_meta["f"])
+    # Gram Portion Weight Math
+    calc_bf_carb_g = int((carb_target_g * 0.40) / (max(bf_carb_api["carbs_100g"], 1) / 100))
+    calc_bf_prot_g = int((protein_target_g * 0.45) / (max(bf_prot_api["protein_100g"], 1) / 100))
+    calc_ln_carb_g = int((carb_target_g * 0.60) / (max(ln_carb_api["carbs_100g"], 1) / 100))
+    calc_ln_prot_g = int((protein_target_g * 0.55) / (max(ln_prot_api["protein_100g"], 1) / 100))
 
-    # Dynamic Weight Scale Mathematics (distributing targets dynamically across 3 core meal frames)
-    calc_bf_carb_g = int((carb_target_g * 0.35) / (max(bf_carb_api["carbs_100g"], 1) / 100))
-    calc_bf_prot_g = int((protein_target_g * 0.30) / (max(bf_prot_api["protein_100g"], 1) / 100))
-
-    calc_ln_carb_g = int((carb_target_g * 0.40) / (max(ln_carb_api["carbs_100g"], 1) / 100))
-    calc_ln_prot_g = int((protein_target_g * 0.40) / (max(ln_prot_api["protein_100g"], 1) / 100))
-
-    calc_dn_carb_g = int((carb_target_g * 0.25) / (max(dn_carb_api["carbs_100g"], 1) / 100))
-    calc_dn_prot_g = int((protein_target_g * 0.30) / (max(dn_prot_api["protein_100g"], 1) / 100))
-
-    # OUTPUT DYNAMIC OUTPUT PLATES
-    st.markdown("---")
-    st.markdown("### 🍽️ Your Custom Calculated Portions")
-    st.caption("Gram configurations scale in real-time according to target caloric thresholds.")
-
+    # Display Dynamic Portion Plates
     st.markdown(f"""
     <div class="plan-card">
-        <h4 style="color: #3b82f6; margin-top: 0;">🌅 Breakfast Setup</h4>
-        <p style="color: #e5e7eb; margin-bottom: 5px;">
-            • Eat <b>{calc_bf_carb_g}g</b> of <b>{bf_carb_api['name']}</b>.<br>
-            • Pair with <b>{calc_bf_prot_g}g</b> of <b>{bf_prot_api['name']}</b> to fulfill morning muscle tissue fuel needs.
-        </p>
-        <span style="color: #9ca3af; font-size: 12px;"><i>🌐 Live API Data Loop: {bf_carb_api['name']} ({bf_carb_api['calories_100g']} kcal/100g)</i></span>
+        <h4 style="color: #3b82f6; margin-top: 0;">🌅 Morning Breakfast Target Portion</h4>
+        <p style="color: #e5e7eb; margin-bottom: 0;">• Eat <b>{calc_bf_carb_g}g</b> of {bf_carb_api['name']} paired with <b>{calc_bf_prot_g}g</b> of {bf_prot_api['name']}.</p>
     </div>
-    
     <div class="plan-card">
-        <h4 style="color: #3b82f6; margin-top: 0;">🍱 Office Lunch Bowl</h4>
-        <p style="color: #e5e7eb; margin-bottom: 5px;">
-            • Base portion: Cook <b>{calc_ln_carb_g}g</b> of <b>{ln_carb_api['name']}</b>.<br>
-            • Protein addition: Prepare <b>{calc_ln_prot_g}g</b> of <b>{ln_prot_api['name']}</b>.<br>
-            • 💡 <i>Calorie Booster</i>: Add 1.5 tablespoons of pure Cow Ghee over this selection to meet structural fat targets easily.
-        </p>
-        <span style="color: #9ca3af; font-size: 12px;"><i>🌐 Live API Data Loop: {ln_prot_api['name']} contains {ln_prot_api['protein_100g']}g protein/100g</i></span>
-    </div>
-    
-    <div class="plan-card">
-        <h4 style="color: #3b82f6; margin-top: 0;">🍽️ Evening Recovery Dinner</h4>
-        <p style="color: #e5e7eb; margin-bottom: 5px;">
-            • Base portion: Serve <b>{calc_dn_carb_g}g</b> of <b>{dn_carb_api['name']}</b>.<br>
-            • Protein addition: Pair with <b>{calc_dn_prot_g}g</b> of <b>{dn_prot_api['name']}</b> to prevent midnight muscle protein breakdown.
-        </p>
+        <h4 style="color: #3b82f6; margin-top: 0;">🍱 Office Lunch Target Portion</h4>
+        <p style="color: #e5e7eb; margin-bottom: 0;">• Eat <b>{calc_ln_carb_g}g</b> of {ln_carb_api['name']} paired with <b>{calc_ln_prot_g}g</b> of {ln_prot_api['name']}. Add 1.5 tbsp Ghee.</p>
     </div>
     """, unsafe_allow_html=True)
 
-    # Postural Workout Node Layout
+    # SECTION 4: LIVE AI CHAT MODULE (LINKED TO OPENAI CORE SPECIFICATIONS)
     st.markdown("---")
-    st.markdown("### 🏋️‍♂️ 45-Min Postural Hypertrophy Log")
-    st.caption("Target exercises to reverse desk slouching and protect joints.")
-    w_col1, w_col2 = st.columns(2)
-    with w_col1:
-        st.number_input("Leg Press / Goblet Squats (kg)", min_value=5, value=25, key="ex1")
-        st.number_input("Dumbbell Romanian Deadlifts (kg)", min_value=5, value=16, key="ex2")
-    with w_col2:
-        st.number_input("Dumbbell Chest Press (kg per hand)", min_value=4, value=12, key="ex3")
-        st.number_input("Seated Rows / Lat Pulldowns (kg)", min_value=10, value=30, key="ex4")
+    st.markdown("### 💬 4. Chat with Your AI Hypertrophy Coach")
+    st.caption("Ask questions about your calories, workout recovery, or food alternatives.")
 
-    if location == "Bengaluru, India (ORR / Whitefield IT Belt)":
-        st.markdown("---")
-        st.markdown("""
-        <div style="background-color: #1e1b4b; border-left: 5px solid #818cf8; padding: 18px; border-radius: 12px;">
-            <p style="color: #c7d2fe; font-size: 14px; line-height: 1.6; margin-bottom: 0;">
-                ⚠️ <b>IT Hub Epidemiological Warning</b>: Clinical audits track that <b>77% of Bengaluru tech professionals</b> experience active Vitamin D3 reductions due to indoor shifts. Balance this by taking walking meetings or using short standing-break intervals during long computer shifts.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+    # Initialize conversation state memory
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = [
+            {"role": "assistant", "content": f"Hello! I am your custom Health Coach. I see you are {age} years old, weigh {weight_kg}kg, live in {location.split(',')[0]}, and want to achieve a target of {caloric_target} kcal/day. How can I assist you with your diet or exercises today?"}
+        ]
 
-    st.markdown("---")
-    if st.button("💾 LOCK MIX & UPDATE MOBILE LOG"):
-        st.balloons()
-        st.success("Custom meal configuration and exercise tracking targets synchronized successfully via Open Food Facts!")
+    # Render previous chat blocks nicely
+    for message in st.session_state.chat_history:
+        if message["role"] == "user":
+            st.markdown(f'<div class="user-bubble">{message["content"]}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f'<div class="ai-bubble">🤖 {message["content"]}</div>', unsafe_allow_html=True)
+
+    # Capture User Input from standard mobile chat strip
+    user_query = st.chat_input("Type your question here...")
+
+    if user_query:
+        # Show user message instantly
+        st.markdown(f'<div class="user-bubble">{user_query}</div>', unsafe_allow_html=True)
+        st.session_state.chat_history.append({"role": "user", "content": user_query})
+
+        # Secure OpenAI Endpoint Proxy Construction
+        # Pulls your secret API key safely from Streamlit's environment cloud secrets manager
+        api_key = st.secrets.get("OPENAI_API_KEY", "")
+
+        if not api_key:
+            ai_response = "⚠️ App Configuration Note: Please add your `OPENAI_API_KEY` inside your Streamlit Cloud Secrets dashboard to enable live GPT responses. Here is an offline suggestion: Make sure you monitor your protein macro threshold closely!"
+        else:
+            try:
+                # Format system contextual mapping instructions
+                system_prompt = f"You are an expert sports nutritionist and strength coach assisting a {age}-year-old male user. Weight: {weight_kg}kg, Height: {height_cm}cm, Location: {location}. Target Calories: {caloric_target}kcal, Target Protein: {protein_target_g}g. Provide actionable, concise health guidance. Keep answers short and optimal for reading on an iPhone mobile screen."
+                
+                # Setup structure payload
+                messages_payload = [{"role": "system", "content": system_prompt}]
+                for h in st.session_state.chat_history[-5:]: # Keep last 5 iterations to save mobile data memory
+                    messages_payload.append({"role": h["role"], "content": h["content"]})
+
+                data_payload = json.dumps({
+                    "model": "gpt-4o-mini",
+                    "messages": messages_payload,
+                    "temperature": 0.7
+                }).encode("utf-8")
+
+                # Send HTTPS request directly to OpenAI endpoints without heavy third-party packages
+                req = urllib.request.Request(
+                    "https://openai.com",
+                    data=data_payload,
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json"
+                    }
+                )
+                
+                with urllib.request.urlopen(req) as resp:
+                    resp_data = json.loads(resp.read().decode("utf-8"))
+                    ai_response = resp_data["choices"][0]["message"]["content"]
+                    
+            except Exception as e:
+                ai_response = f"Connection error reaching OpenAI servers: {str(e)}"
+
+        # Render response block and append to continuous state profile
+        st.markdown(f'<div class="ai-bubble">🤖 {ai_response}</div>', unsafe_allow_html=True)
+        st.session_state.chat_history.append({"role": "assistant", "content": ai_response})
