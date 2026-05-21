@@ -9,10 +9,10 @@ st.set_page_config(
     page_title="Namma Health Pro",
     page_icon="🩺",
     layout="centered",
-    initial_sidebar_state="expanded" # Automatically exposes the native navigation menu
+    initial_sidebar_state="expanded" 
 )
 
-# Custom High-End iOS Theme Stylesheet (Premium Dark UI)
+# Premium Luxury Theme Stylesheet
 st.markdown("""
     <style>
     @import url('https://googleapis.com');
@@ -86,7 +86,7 @@ st.markdown("""
 def fetch_live_food_data(barcode, fallback_name, c_100, p_100, cb_100, f_100):
     try:
         url = f"https://openfoodfacts.org{barcode}.json"
-        response = requests.get(url, headers={'User-Agent': 'NammaHealthPro - iOS - Version 7.0'}, timeout=5)
+        response = requests.get(url, headers={'User-Agent': 'NammaHealthPro - iOS - Version 8.0'}, timeout=5)
         if response.status_code == 200:
             data = response.json()
             if data.get("status") == 1:
@@ -276,11 +276,25 @@ elif app_page == "💬 ChatGPT Health Coach":
     st.title("💬 Chat with Your AI Hypertrophy Coach")
     st.caption("Ask questions about your custom calorie targets or specific exercise alterations.")
 
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = [
-            {"role": "assistant", "content": f"Hello! I am your Health Coach. I have your parameters: Age {st.session_state.age}, Weight {st.session_state.weight}kg, Goal Surplus Target {caloric_target} kcal. What can I clarify for you today?"}
+    # Shared default template helper function
+    def load_initial_chat():
+        return [
+            {"role": "assistant", "content": f"Hello! I am your custom Health Coach. I have your parameters: Age {st.session_state.age}, Weight {st.session_state.weight}kg, Goal Surplus Target {caloric_target} kcal. What can I clarify for you today?"}
         ]
 
+    # Initialize conversation state memory if empty
+    if "chat_history" not in st.session_state or not st.session_state.chat_history:
+        st.session_state.chat_history = load_initial_chat()
+
+    # ---- INTERACTIVE DYNAMIC CLEAR BUTTON HUB ----
+    # Action clear element re-zeros and triggers an immediate view reset
+    if st.button("🗑️ Clear Conversation History", type="secondary", use_container_width=True):
+        st.session_state.chat_history = load_initial_chat()
+        st.rerun()
+
+    st.markdown("---")
+
+    # Render current message profiles
     for message in st.session_state.chat_history:
         if message["role"] == "user":
             st.markdown(f'<div class="user-bubble">{message["content"]}</div>', unsafe_allow_html=True)
@@ -311,7 +325,7 @@ elif app_page == "💬 ChatGPT Health Coach":
                     messages=messages_payload,
                     temperature=0.7
                 )
-                ai_response = response.choices[0].message.content
+                ai_response = response.choices.message.content
                     
             except Exception as e:
                 ai_response = f"Gateway Connection Error: {str(e)}"
